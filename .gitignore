@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.cache/
+review/
+output/
+public/image-assets/
+public/image-previews/
+public/hologram-gallery.webp
+public/hologram-nebula.webp
+*.log
