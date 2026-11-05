@@ -1,13 +1,15 @@
 import './style.css';
+import './legacy-theme.css';
 import {routes,parseRoute,groupName,monthName,pct,matchConditions,chartDomain,histogramPath,nearestBin,escapeHTML as esc} from './core.mjs';
 
 const main=document.querySelector('main'),nav=document.querySelector('nav'),sheet=document.querySelector('#sheet'),sheetContent=document.querySelector('#sheet-content');
+document.querySelector('.skip').onclick=e=>{e.preventDefault();main.focus();};
 const names={map:'3D 모임 지도',monthly:'월별 행사 수',topics:'대화 주제 비중',similarity:'답변 표현의 유사성'};
 const shortNames={map:'지도',monthly:'월별',topics:'대화',similarity:'유사도'};
 const icons={map:'<circle cx="12" cy="12" r="4"/><ellipse cx="12" cy="12" rx="11" ry="5" transform="rotate(-35 12 12)"/>',monthly:'<path d="M4 4v16h17M8 15V9m5 6V4m5 11v-7"/>',topics:'<path d="M3 4h18v12H9l-5 4v-4H3zM7 8h10M7 12h6"/>',similarity:'<path d="M3 3v18h19M5 17c4 0 3-11 7-11s2 11 9 11M5 15c3 0 3-6 8-6s4 6 8 6"/>'};
 const icon=(key,cls='')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[key]}</svg>`;
-const shades=['#d9e4da','#b0cbb8','#7da28b','#517d65','#315c45','#173e2b'];
-const lineColors=['#116955','#a15828','#65519d'];
+const shades=['#E2E8F0','#AEBBCB','#8295AD','#59718E','#354B66','#142D49'];
+const lineColors=['#59CBE8','#F1BD77','#BCA7F5'];
 const dataCache=new Map(),views=new Map(),pendingViews=new Map(),scrolls=new Map();
 const state={page:'',query:new URLSearchParams(),selection:{},topicsFocus:false,similarityFocus:false,monthly:null,recordSelection:{},binSelection:{}};
 let routeVersion=0,mapView=null,filterData=null,eventData=null,opener=null;
@@ -40,7 +42,7 @@ function home(){
 async function createMap(){
  const [graph,events,criteria,{createMapView}]=await Promise.all([json('graph'),json('events'),json('criteria'),import('./map.js')]);
  eventData=events;filterData=criteria;
- const root=element(`<section>${heading('map')}<div class="map-stage"><div class="map-stats" aria-live="polite">행사 241 · 연결 278</div><div class="map-zoom"><button type="button" aria-label="지도 확대">＋</button><button type="button" aria-label="지도 축소">－</button></div><div class="map-fallback" hidden>3D 화면을 열지 못했어요.<br>아래 행사 목록에서 같은 자료를 볼 수 있어요.<button type="button">3D 다시 열기</button></div></div><p class="map-hint">밀어서 회전 · 두 손가락으로 확대</p><div class="map-tools"><button type="button" data-action="filters">조건 선택</button><button type="button" data-action="list">행사 목록</button></div><div class="toolbar"><span class="small-note" data-map-count>전체 241개 행사</span><button type="button" class="quiet map-reset">처음 보기 ↺</button></div><div class="condition-badges"></div>${explain('<p>점은 행사, 선은 모집 문구와 이미지가 비슷한 행사의 연결입니다. 실제 교류나 인기도를 뜻하지 않습니다.</p><p>SMCC 공개 모집 자료 · 2026.10.26 기준. 색은 기존 분석의 분위기 분류입니다.</p>')}</section>`);
+ const root=element(`<section>${heading('map')}<div class="map-stage"><div class="map-stats" aria-live="polite">행사 241 · 연결 278</div><div class="map-zoom"><button type="button" aria-label="지도 확대">＋</button><button type="button" aria-label="지도 축소">－</button></div><div class="map-fallback" hidden>3D 화면을 열지 못했어요.<br>아래 행사 목록에서 같은 자료를 볼 수 있어요.<button type="button">3D 다시 열기</button></div></div><p class="map-hint">밀어서 회전 · 두 손가락으로 확대</p><ul class="map-legend">${graph.clusters.map(c=>`<li><i style="--cluster:${c.color}"></i>${esc(c.label)}</li>`).join('')}</ul><div class="map-tools"><button type="button" data-action="filters">조건 선택</button><button type="button" data-action="list">행사 목록</button></div><div class="toolbar"><span class="small-note" data-map-count>전체 241개 행사</span><button type="button" class="quiet map-reset">처음 보기 ↺</button></div><div class="condition-badges"></div>${explain('<p>점은 행사, 선은 모집 문구와 이미지가 비슷한 행사의 연결입니다. 실제 교류나 인기도를 뜻하지 않습니다.</p><p>SMCC 공개 모집 자료 · 2026.10.26 기준. 색은 기존 분석의 분위기 분류입니다.</p>')}</section>`);
  const stage=root.querySelector('.map-stage');
  mapView=createMapView(stage,graph,id=>pushPanel({panel:null,event:id}));
  const zoom=root.querySelectorAll('.map-zoom button');zoom[0].onclick=()=>mapView.zoom(.8);zoom[1].onclick=()=>mapView.zoom(1.25);
@@ -72,7 +74,7 @@ async function monthly(){
 }
 async function topics(){
  const data=await json('charts');
- const root=element(`<section class="chart-page">${heading('topics')}<div class="toolbar"><button type="button" class="emphasis-toggle" aria-pressed="false">SMCC 강조</button></div><p class="conclusion" hidden>SMCC는 모임 외 대화 주제가 풍부함</p><div class="panel"><div class="legend">${data.categories.map((c,i)=>`<span class="legend-item"><span class="swatch" style="background:${shades[i]}"></span>${esc(c)}</span>`).join('')}</div>${data.records.map(r=>`<button type="button" class="record-row ${r.group==='SMCC'?'smcc':''}" data-record="${r.id}" aria-label="${esc(r.name)} 항목별 비율 보기"><span class="record-title"><span>${esc(r.name)}</span><span class="more" aria-hidden="true">상세 ↗</span></span><span class="stack">${r.targets.map((t,i)=>`<span class="stack-segment" data-category="${esc(t.category)}" style="width:${t.percent}%;background:${shades[i]}"></span>`).join('')}${r.group==='SMCC'?`<span class="focus-outline" style="left:${r.targets[0].percent}%;right:0"></span>`:''}</span></button>`).join('')}<div class="axis-labels" style="margin-left:0"><span>0%</span><span>50%</span><span>100%</span></div></div>${explain('<p>각 대화 기록에서 어떤 대상을 이야기했는지 분류한 비율입니다. 막대를 누르면 항목별 비율을 볼 수 있습니다.</p>')}</section>`);
+ const root=element(`<section class="chart-page">${heading('topics')}<div class="toolbar"><button type="button" class="emphasis-toggle" aria-pressed="false">SMCC 강조</button></div><p class="conclusion" hidden>SMCC는 모임 외 대화 주제가 풍부함</p><div class="panel"><div class="legend">${data.categories.map((c,i)=>`<span class="legend-item"><span class="swatch category-${i}" style="background-color:${shades[i]}"></span>${esc(c)}</span>`).join('')}</div>${data.records.map(r=>`<button type="button" class="record-row ${r.group==='SMCC'?'smcc':''}" data-record="${r.id}" aria-label="${esc(r.name)} 항목별 비율 보기"><span class="record-title"><span>${esc(r.name)}</span><span class="more" aria-hidden="true">상세 ↗</span></span><span class="stack">${r.targets.map((t,i)=>`<span class="stack-segment category-${i}" data-category="${esc(t.category)}" style="width:${t.percent}%;background-color:${shades[i]}"></span>`).join('')}${r.group==='SMCC'?`<span class="focus-outline" style="left:${r.targets[0].percent}%;right:0"></span>`:''}</span></button>`).join('')}<div class="axis-labels" style="margin-left:0"><span>0%</span><span>50%</span><span>100%</span></div></div>${explain('<p>각 대화 기록에서 어떤 대상을 이야기했는지 분류한 비율입니다. 막대를 누르면 항목별 비율을 볼 수 있습니다.</p>')}</section>`);
  root.querySelectorAll('[data-record]').forEach(b=>b.onclick=()=>pushPanel({record:b.dataset.record}));
  root.querySelector('.emphasis-toggle').onclick=()=>{state.topicsFocus=!state.topicsFocus;root.update();};
  root.update=()=>{root.classList.toggle('focus-mode',state.topicsFocus);root.querySelector('.emphasis-toggle').setAttribute('aria-pressed',String(state.topicsFocus));root.querySelector('.conclusion').hidden=!state.topicsFocus;};
@@ -142,7 +144,7 @@ async function panelContent(q,page){
   const img=content.querySelector('img');if(img&&e.image){img.srcset=`./${e.preview} 360w, ./${e.image} 800w`;img.sizes='(min-width:650px) 606px, calc(100vw - 44px)';}imageRecovery(content);return {title:'행사 상세',content};
  }
  if(page==='map'&&q.get('panel')==='filters'){
-  const c=filterData,content=element(`<div><p class="small-note">각 항목에서 하나씩 선택할 수 있어요.</p>${c.groups.map(g=>`<fieldset class="filter-group"><legend>${esc(g.title)}</legend><div class="filter-options">${g.items.map(i=>`<button type="button" data-group-id="${g.id}" data-condition="${i.id}" aria-pressed="${state.selection[g.id]===i.id}"><span>${esc(i.label)}</span><span>${i.eventIds.length}</span></button>`).join('')}</div></fieldset>`).join('')}<button type="button" class="clear-conditions">전체 해제</button><p class="small-note" style="margin-top:20px">본문이 있는 240개 행사의 모집 안내 기준입니다. ‘안내 없음’은 금지나 실제 미참여를 뜻하지 않습니다.</p><div class="filter-footer"><span class="filter-count"></span><button type="button" class="apply-filter">지도 보기</button></div></div>`);
+  const c=filterData,content=element(`<div><p class="small-note">각 항목에서 하나씩 선택할 수 있어요.</p>${c.groups.map(g=>`<fieldset class="filter-group"><legend>${esc(g.title)}</legend><div class="filter-options">${g.items.map(i=>`<button type="button" data-group-id="${g.id}" data-condition="${i.id}" style="--share:${i.eventIds.length/c.knownTotal*100}%" aria-pressed="${state.selection[g.id]===i.id}"><span>${esc(i.label)}</span><span>${i.eventIds.length}</span></button>`).join('')}</div></fieldset>`).join('')}<button type="button" class="clear-conditions">전체 해제</button><p class="small-note" style="margin-top:20px">본문이 있는 240개 행사의 모집 안내 기준입니다. ‘안내 없음’은 금지나 실제 미참여를 뜻하지 않습니다.</p><div class="filter-footer"><span class="filter-count"></span><button type="button" class="apply-filter">지도 보기</button></div></div>`);
   const update=()=>{content.querySelectorAll('[data-condition]').forEach(b=>b.setAttribute('aria-pressed',String(state.selection[b.dataset.groupId]===b.dataset.condition)));content.querySelector('.filter-count').textContent=`${matchConditions(eventData,c,state.selection).size}개 행사`;updateFilters();};
   content.querySelectorAll('[data-condition]').forEach(b=>b.onclick=()=>{const key=b.dataset.groupId;state.selection[key]=state.selection[key]===b.dataset.condition?null:b.dataset.condition;update();});
   content.querySelector('.clear-conditions').onclick=()=>{state.selection={};update();};content.querySelector('.apply-filter').onclick=closePanel;update();return {title:'조건 선택',content};
@@ -155,7 +157,7 @@ async function panelContent(q,page){
  }
  if(page==='topics'&&q.has('record')){
   const d=await json('charts'),r=d.records.find(r=>r.id===q.get('record'));if(!r)return null;
-  return {title:r.name,content:element(`<dl class="percent-list">${r.targets.map((t,i)=>`<div><dt><span class="swatch" style="background:${shades[i]}"></span>${esc(t.category)}</dt><dd>${pct(t.percent)}</dd></div>`).join('')}</dl>`)};
+  return {title:r.name,content:element(`<dl class="percent-list">${r.targets.map((t,i)=>`<div><dt><span class="swatch category-${i}" style="background-color:${shades[i]}"></span>${esc(t.category)}</dt><dd>${pct(t.percent)}</dd></div>`).join('')}</dl>`)};
  }
  return null;
 }

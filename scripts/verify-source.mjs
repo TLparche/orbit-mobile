@@ -11,4 +11,11 @@ const {createLayout,tickLayout}=await import(pathToFileURL(join(work,'hologram_c
 assert.deepEqual(publicGraph.nodes.map(n=>n.position),tickLayout(createLayout(graph),300));assert.deepEqual(publicGraph.edges,graph.edges.map(e=>({source:e.source,target:e.target})));
 criteria.groups.forEach((g,i)=>g.items.forEach((v,j)=>assert.deepEqual(publicCriteria.groups[i].items[j].eventIds,v.eventIds)));
 for(const m of monthly)assert.deepEqual([...m.eventIds].sort(),timeline.events.filter(e=>e.month===m.month).map(e=>e.id).sort());
-console.log('PASS: original graph positions/edges, all condition memberships, all monthly events and every chart value are identical.');
+const {pointShaders,edgeShaders}=await import('../src/legacy-shaders.mjs');
+const source=await readFile(join(work,'hologram.js'),'utf8');
+for(const [name,pair]of [['pointMaterial',pointShaders],['lineMaterial',edgeShaders]]){
+ const block=source.slice(source.indexOf(`${name}=new THREE.ShaderMaterial`));
+ const match=block.match(/vertexShader:`([^`]+)`,\s*fragmentShader:`([^`]+)`/);
+ assert.equal(pair.vertex,match[1]);assert.equal(pair.fragment,match[2]);
+}
+console.log('PASS: original graph positions/edges, condition memberships, monthly events, chart values and all four original shaders are identical.');
