@@ -183,7 +183,7 @@ async function renderRoute(){
    else sheet.close();
   }else if(sheet.open){sheet.close();if(opener?.isConnected)opener.focus({preventScroll:true});}
   view.update?.();
- }catch(error){if(version!==routeVersion)return;if(sheet.open)sheetContent.replaceChildren(errorNode(()=>renderRoute()));else main.replaceChildren(errorNode(()=>renderRoute()));}
+ }catch(error){if(version!==routeVersion)return;if(sheet.open){document.querySelector('#sheet-title').textContent='자료 연결 확인';sheetContent.replaceChildren(errorNode(()=>renderRoute()));}else main.replaceChildren(errorNode(()=>renderRoute()));}
 }
 window.addEventListener('hashchange',renderRoute);window.addEventListener('popstate',()=>{void renderRoute();});
 document.addEventListener('visibilitychange',()=>mapView?.setActive(state.page==='map'&&!sheet.open&&!document.hidden));

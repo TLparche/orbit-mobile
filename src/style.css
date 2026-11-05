@@ -11,3 +11,7 @@ dialog{position:fixed;inset:auto 0 0;margin:0 auto;padding:0;width:100%;max-widt
 .hist-card.muted .hist-line{stroke-opacity:.35}
 .month-row{grid-template-columns:2.8rem minmax(0,1fr) 2.1rem;padding-inline:8px}
 .month-row>span:first-child{white-space:nowrap}
+[hidden]{display:none!important}
+.map-fallback button{color:var(--ink)}
+.map-stage:has(.map-fallback:not([hidden])){height:auto;min-height:0}
+.map-stage:has(.map-fallback:not([hidden]))+.map-hint{display:none}
