@@ -5,3 +5,9 @@ dialog{position:fixed;inset:auto 0 0;margin:0 auto;padding:0;width:100%;max-widt
 @media(min-width:700px){main{padding-inline:36px}.topbar{padding-inline:36px}.home-grid{grid-template-columns:1fr 1fr}.home-link{min-height:155px}.home-link:first-child{min-height:155px}.intro{padding-top:50px}.page-heading{margin-top:22px}.panel{padding:28px}.map-stage{height:560px}.map-tools{grid-template-columns:220px 220px}.chart-page{max-width:740px;margin:auto}.home-foot{margin-top:30px}}
 @media(max-width:374px){main{padding-inline:16px}.topbar{padding-inline:16px}.panel{padding:17px}.home-link{padding:16px;gap:12px}.legend{grid-template-columns:1fr}.sheet-head{padding-inline:16px}#sheet-content{padding-inline:16px}.map-reset{margin-left:0}.toolbar{gap:8px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.month-row.selected{background:#e5f0e8;color:#075d45;padding-inline:8px}
+.record-switches button[aria-pressed=true] path{stroke:currentColor}
+.hist-plot text{font-size:.89rem}
+.hist-card.muted .hist-line{stroke-opacity:.35}
+.month-row{grid-template-columns:2.8rem minmax(0,1fr) 2.1rem;padding-inline:8px}
+.month-row>span:first-child{white-space:nowrap}

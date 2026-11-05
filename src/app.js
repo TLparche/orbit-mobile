@@ -86,10 +86,11 @@ async function similarity(){
  groups.forEach((group,gi)=>{
   const rs=data.records.filter(r=>r.group===group),color=lineColors[gi],dashes=['','10 5','2 5','10 4 2 4'];
   const card=element(`<article class="panel hist-card" data-group="${group}"><div class="hist-header"><h2>${groupName(group)}</h2></div><div class="record-switches">${rs.map((r,i)=>`<button type="button" data-line="${r.id}" aria-pressed="false"><svg viewBox="0 0 26 12" aria-hidden="true"><path d="M0 6H26" stroke="${color}" stroke-width="3" stroke-dasharray="${dashes[i]}"/></svg>${esc(r.name.replace(/^(SMCC |BTR |별도 크루 )/,''))}</button>`).join('')}</div><p class="chart-axis-caption left">답변쌍 비율 (%)</p><svg class="hist-plot" role="img" aria-label="${groupName(group)} 답변 표현 유사도 분포"></svg><p class="chart-axis-caption">← 다른 표현 · 비슷한 표현 →</p><label class="range-label" for="range-${group}"><span>유사도 구간 선택</span><strong class="bin-label"></strong></label><input id="range-${group}" class="bin-range" type="range" min="0" max="39" step="1" value="25"><div class="value-readout" aria-live="polite"></div></article>`);
-  const svg=card.querySelector('svg.hist-plot');
+  const svg=card.querySelector('svg.hist-plot');let xScale=null;
   const draw=()=>{
-   const width=Math.max(260,svg.getBoundingClientRect().width||300),height=230,left=46,right=14,top=15,bottom=36,w=width-left-right,h=height-top-bottom;
-   const x=v=>left+(v-domain.min)/(domain.max-domain.min)*w,y=v=>top+h-v/domain.top*h;
+   const fontSize=parseFloat(getComputedStyle(document.documentElement).fontSize)*.89;
+   const width=svg.getBoundingClientRect().width||300,height=Math.max(230,fontSize*12),left=Math.max(46,fontSize*2.5),right=Math.max(14,fontSize*.7),top=fontSize,bottom=fontSize*2.25,w=width-left-right,h=height-top-bottom;
+   const x=v=>left+(v-domain.min)/(domain.max-domain.min)*w,y=v=>top+h-v/domain.top*h;xScale=x;
    svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.replaceChildren();
    const node=(tag,attrs,txt)=>{const e=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(txt!=null)e.textContent=txt;svg.append(e);return e;};
    const defs=node('defs',{}),clip=document.createElementNS(ns,'clipPath');clip.id=`clip-${group}`;const rect=document.createElementNS(ns,'rect');for(const[k,v]of Object.entries({x:left,y:top,width:w,height:h+1}))rect.setAttribute(k,v);clip.append(rect);defs.append(clip);
@@ -108,7 +109,7 @@ async function similarity(){
    const label=`${bin.left.toFixed(2)} ~ ${bin.right.toFixed(2)}`;card.querySelector('.bin-label').textContent=label;
    card.querySelector('.bin-range').setAttribute('aria-valuetext',label);
    card.querySelector('.value-readout').innerHTML=`<dl>${rs.filter(r=>!selected||r.id===selected).map(r=>`<dt>${esc(r.name.replace(/^(SMCC |BTR |별도 크루 )/,''))}</dt><dd>${pct(r.histogram[idx].percent)}</dd>`).join('')}</dl>`;
-   if(!x){const vb=svg.viewBox.baseVal;x=v=>46+(v-domain.min)/(domain.max-domain.min)*(vb.width-60);}
+   if(!x)x=xScale;
    const marker=svg.querySelector('.bin-marker');if(marker){marker.setAttribute('x1',x(middle));marker.setAttribute('x2',x(middle));marker.style.display=middle<domain.min?'none':'';}
   };
   card.querySelectorAll('[data-line]').forEach(b=>b.onclick=()=>{state.recordSelection[group]=state.recordSelection[group]===b.dataset.line?null:b.dataset.line;update();});
